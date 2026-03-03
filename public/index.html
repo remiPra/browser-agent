@@ -122,18 +122,10 @@
       font-size: 32px;
     }
 
-    .card.builtin .card-icon {
-      background: var(--accent-glow);
-    }
+    .card.builtin .card-icon { background: var(--accent-glow); }
+    .card.chrome .card-icon { background: var(--orange-dim); }
 
-    .card.chrome .card-icon {
-      background: var(--orange-dim);
-    }
-
-    .card-title {
-      font-size: 18px;
-      font-weight: 600;
-    }
+    .card-title { font-size: 18px; font-weight: 600; }
 
     .card-desc {
       color: var(--text-secondary);
@@ -149,17 +141,21 @@
       font-weight: 500;
     }
 
-    .card.builtin .card-tag {
-      background: var(--accent-glow);
-      color: var(--accent-bright);
-    }
+    .card.builtin .card-tag { background: var(--accent-glow); color: var(--accent-bright); }
+    .card.chrome .card-tag { background: var(--orange-dim); color: var(--orange); }
 
-    .card.chrome .card-tag {
-      background: var(--orange-dim);
-      color: var(--orange);
+    .card-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      min-height: 18px;
     }
+    .card-status.loading { color: var(--orange); }
+    .card-status.ok { color: var(--green); }
+    .card-status.fail { color: var(--red); }
 
-    /* ── Chrome CDP section ── */
+    .card.disabled { pointer-events: none; opacity: 0.6; }
+
+    /* ── Info section ── */
     .cdp-section {
       margin-top: 32px;
       background: var(--bg-surface);
@@ -220,24 +216,83 @@
       font-size: 12px;
       color: var(--text-dim);
     }
-
     .cdp-test-result.ok { color: var(--green); }
     .cdp-test-result.fail { color: var(--red); }
 
-    .card-status {
-      font-family: 'JetBrains Mono', monospace;
+    /* ── Modal confirmation ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .modal-icon { font-size: 40px; margin-bottom: 16px; }
+    .modal h2 { font-size: 18px; margin-bottom: 12px; }
+
+    .modal p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    .modal-warning {
+      background: var(--orange-dim);
+      border: 1px solid rgba(255, 171, 64, 0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      color: var(--orange);
       font-size: 12px;
-      min-height: 18px;
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    .card-status.loading { color: var(--orange); }
-    .card-status.ok { color: var(--green); }
-    .card-status.fail { color: var(--red); }
-
-    .card.disabled {
-      pointer-events: none;
-      opacity: 0.6;
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
     }
+
+    .modal-btn {
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .modal-btn.cancel {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .modal-btn.cancel:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    .modal-btn.confirm {
+      background: linear-gradient(135deg, #ff9800, #ff5722);
+      color: white;
+    }
+    .modal-btn.confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3); }
 
     @media (max-width: 600px) {
       .cards { grid-template-columns: 1fr; }
@@ -257,20 +312,20 @@
     <div class="cards">
       <a class="card builtin" href="/agent.html?mode=builtin">
         <div class="card-icon">🌐</div>
-        <div class="card-title">Navigateur integre</div>
+        <div class="card-title">Navigateur intégré</div>
         <div class="card-desc">
-          Lance un Chromium Playwright isole.<br>
-          Mode stealth, sessions persistantes, anti-detection.
+          Lance un Chromium Playwright isolé.<br>
+          Mode stealth, sessions persistantes, anti-détection.
         </div>
         <div class="card-tag">Playwright Chromium</div>
       </a>
 
-      <div class="card chrome" id="chromeCard" onclick="launchChrome()">
+      <div class="card chrome" id="chromeCard" onclick="onChromeClick()">
         <div class="card-icon">🟡</div>
         <div class="card-title">Mon Chrome</div>
         <div class="card-desc">
           Connecte votre vrai Google Chrome via CDP.<br>
-          Extensions, cookies, sessions deja connectees.
+          Extensions, cookies, sessions déjà connectées.
         </div>
         <div class="card-tag">Chrome DevTools Protocol</div>
         <div class="card-status" id="chromeStatus"></div>
@@ -280,11 +335,9 @@
     <div class="cdp-section">
       <h3>Mon Chrome — Info</h3>
       <div class="cdp-instructions">
-        Phantom Agent lance automatiquement votre Chrome avec le mode debug.<br><br>
-        <b>Si Chrome est deja ouvert</b>, il faut d'abord fermer toutes les fenetres Chrome
-        (verifiez le gestionnaire des taches), puis recliquez "Mon Chrome".<br><br>
-        Lancement manuel si besoin :<br>
-        <code>chrome.exe --remote-debugging-port=9222</code>
+        Phantom Agent ferme automatiquement Chrome et le relance avec le mode debug.<br>
+        Vos onglets seront restaurés grâce à <code>--restore-last-session</code>.<br><br>
+        ⚠️ Si vous avez du travail non sauvegardé dans Chrome, sauvegardez-le avant !
       </div>
       <div class="cdp-test-row">
         <button class="cdp-test-btn" onclick="testCDP()">Tester la connexion CDP</button>
@@ -293,34 +346,65 @@
     </div>
   </div>
 
+  <!-- ── Modal de confirmation ── -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+      <div class="modal-icon">🔄</div>
+      <h2>Relancer Chrome ?</h2>
+      <p>
+        Pour se connecter à votre Chrome, Phantom Agent doit le <b>fermer</b> puis le <b>relancer</b> avec le mode debug activé.
+      </p>
+      <div class="modal-warning">
+        ⚠️ Chrome va se fermer ! Vos onglets seront restaurés automatiquement, mais sauvegardez votre travail en cours.
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeModal()">Annuler</button>
+        <button class="modal-btn confirm" onclick="confirmLaunchChrome()">🚀 Relancer Chrome</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    async function testCDP() {
-      const result = document.getElementById('cdpResult');
-      result.className = 'cdp-test-result';
-      result.textContent = 'Test en cours...';
+    // ── CDP déjà dispo ? → pas besoin de modal ──
+    async function onChromeClick() {
+      // D'abord vérifier si CDP est déjà actif
       try {
         const resp = await fetch('/api/check-cdp');
         const data = await resp.json();
         if (data.ok) {
-          result.className = 'cdp-test-result ok';
-          result.textContent = `Connecte ! ${data.browser}`;
-        } else {
-          result.className = 'cdp-test-result fail';
-          result.textContent = 'Chrome CDP non detecte sur le port 9222';
+          // CDP déjà prêt → on y va direct !
+          window.location.href = '/agent.html?mode=chrome';
+          return;
         }
-      } catch {
-        result.className = 'cdp-test-result fail';
-        result.textContent = 'Erreur de communication avec le serveur';
-      }
+      } catch { /* pas dispo */ }
+
+      // Sinon, afficher la modal de confirmation
+      document.getElementById('confirmModal').classList.add('visible');
     }
 
-    async function launchChrome() {
+    function closeModal() {
+      document.getElementById('confirmModal').classList.remove('visible');
+    }
+
+    // Fermer modal en cliquant dehors
+    document.getElementById('confirmModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    // ── Lancer Chrome (après confirmation) ──
+    async function confirmLaunchChrome() {
+      closeModal();
+
       const card = document.getElementById('chromeCard');
       const status = document.getElementById('chromeStatus');
 
       card.classList.add('disabled');
       status.className = 'card-status loading';
-      status.textContent = 'Lancement de Chrome...';
+      status.textContent = '🔪 Fermeture de Chrome...';
+
+      // Petit délai visuel
+      await new Promise(r => setTimeout(r, 500));
+      status.textContent = '🚀 Relancement avec CDP...';
 
       try {
         const resp = await fetch('/api/launch-chrome', { method: 'POST' });
@@ -328,11 +412,10 @@
 
         if (data.ok) {
           status.className = 'card-status ok';
-          status.textContent = `${data.browser || 'Chrome'} pret !`;
-          // Rediriger vers l'agent
+          status.textContent = `✅ ${data.browser || 'Chrome'} prêt !`;
           setTimeout(() => {
             window.location.href = '/agent.html?mode=chrome';
-          }, 500);
+          }, 600);
         } else {
           status.className = 'card-status fail';
           status.textContent = data.error;
@@ -342,6 +425,27 @@
         status.className = 'card-status fail';
         status.textContent = 'Erreur de communication avec le serveur';
         card.classList.remove('disabled');
+      }
+    }
+
+    // ── Tester CDP manuellement ──
+    async function testCDP() {
+      const result = document.getElementById('cdpResult');
+      result.className = 'cdp-test-result';
+      result.textContent = 'Test en cours...';
+      try {
+        const resp = await fetch('/api/check-cdp');
+        const data = await resp.json();
+        if (data.ok) {
+          result.className = 'cdp-test-result ok';
+          result.textContent = `✅ Connecté ! ${data.browser}`;
+        } else {
+          result.className = 'cdp-test-result fail';
+          result.textContent = '❌ Chrome CDP non détecté sur le port 9222';
+        }
+      } catch {
+        result.className = 'cdp-test-result fail';
+        result.textContent = 'Erreur de communication avec le serveur';
       }
     }
   </script>
