@@ -1,7 +1,7 @@
 // ── Planner ──────────────────────────────────────────────────────────
 // Couche 🧠 PLANIFICATEUR : décompose les tâches complexes en sous-tâches
 
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { CONFIG } from '../config.js';
 
 const PLANNER_PROMPT = `Tu es le planificateur de Phantom Agent, un agent d'automatisation web.
@@ -34,7 +34,10 @@ RÈGLES :
 
 export class Planner {
   constructor() {
-    this.client = new Anthropic({ apiKey: CONFIG.ANTHROPIC_API_KEY });
+    this.client = new OpenAI({
+      apiKey: CONFIG.ZAI_API_KEY,
+      baseURL: CONFIG.ZAI_BASE_URL,
+    });
   }
 
   // ── Planifier une tâche ──────────────────────────────────────────
@@ -42,19 +45,16 @@ export class Planner {
     console.log(`🧠 Planification de la tâche : "${userTask}"`);
 
     try {
-      const response = await this.client.messages.create({
-        model: CONFIG.CLAUDE_MODEL,
+      const response = await this.client.chat.completions.create({
+        model: CONFIG.ZAI_MODEL,
         max_tokens: 2048,
-        system: PLANNER_PROMPT,
         messages: [
-          {
-            role: 'user',
-            content: `Tâche à planifier : ${userTask}`,
-          },
+          { role: 'system', content: PLANNER_PROMPT },
+          { role: 'user', content: `Tâche à planifier : ${userTask}` },
         ],
       });
 
-      const text = response.content[0]?.text || '';
+      const text = response.choices[0]?.message?.content || '';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       
       if (!jsonMatch) {

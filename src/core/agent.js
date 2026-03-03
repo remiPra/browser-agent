@@ -1,15 +1,14 @@
 // ── Phantom Agent v3 ─────────────────────────────────────────────────
 // Orchestrateur principal : Planificateur → [Observer → Décideur → Exécuteur]
 
-import { BrowserController } from './browser-controller.js';
 import { DOMObserver } from './dom-observer.js';
 import { AIDecider } from './ai-decider.js';
 import { Planner } from './planner.js';
 import { CONFIG } from '../config.js';
 
 export class PhantomAgent {
-  constructor(eventCallback = null) {
-    this.browser = new BrowserController();
+  constructor(browserController, eventCallback = null) {
+    this.browser = browserController;
     this.observer = new DOMObserver(this.browser);
     this.decider = new AIDecider();
     this.planner = new Planner();

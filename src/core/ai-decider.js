@@ -2,17 +2,22 @@
 // Couche 🎯 DÉCIDEUR : Claude analyse la page et décide
 // v3 : prompt clarifié sur l'indexation, anti-boucle renforcé
 
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { CONFIG } from '../config.js';
 
-const SYSTEM_PROMPT = `Tu es Phantom Agent, un agent d'automatisation web. Tu contrôles un navigateur et accomplis des tâches.
+const SYSTEM_PROMPT = `Tu es Phantom Agent, un agent d'automatisation web autonome. Tu contrôles un navigateur et accomplis des tâches.
 
-À chaque étape tu reçois l'état de la page et tu choisis UNE action.
+À chaque étape tu reçois :
+- Un screenshot de la page (image)
+- Le contenu structuré de la page (titres, paragraphes, résultats de recherche...)
+- Les éléments interactifs numérotés [0], [1], [2]...
+- L'historique de tes dernières actions
+
+Tu dois analyser TOUT ce contenu pour comprendre la page, puis choisir UNE action.
 
 ═══ INDEXATION ═══
 Les éléments sont numérotés [0], [1], [2]... etc.
 ⚠️ L'index est GLOBAL et UNIQUE : le même [N] sert pour cliquer ET pour taper.
-Par exemple, si le champ de recherche est [8], tu utilises "index": 8 pour y taper.
 
 ═══ ACTIONS ═══
 
@@ -32,30 +37,49 @@ Saisie (préfère type_by_placeholder quand il y a un placeholder) :
   {"action": "press_key", "key": "Enter", "reason": "..."}
 
 Fin :
-  {"action": "done", "result": "Résumé du résultat", "reason": "..."}
+  {"action": "done", "result": "Résumé DÉTAILLÉ du résultat avec les données trouvées", "reason": "..."}
   {"action": "error", "message": "Description", "reason": "..."}
 
+═══ CONTENU STRUCTURÉ ═══
+Tu reçois le contenu de la page organisé en sections :
+- 📊 Type de page : search_results, article, login, form, listing, homepage
+- Résultats de recherche : titre + snippet + URL de chaque résultat
+- Titres : hiérarchie h1 → h6
+- Contenu principal : paragraphes, listes
+- Champs de saisie et boutons/liens
+
+UTILISE CE CONTENU pour :
+- Lire et comprendre ce qui est affiché
+- Trouver l'information demandée par l'utilisateur
+- Choisir le bon lien/bouton à cliquer
+- Rédiger un résumé riche quand tu as terminé (action "done")
+
 ═══ RÈGLES CRITIQUES ═══
-1. L'index [N] est le MÊME pour click et type. Si [8] est un textarea, tu tapes avec "index": 8
+1. L'index [N] est le MÊME pour click et type
 2. click_by_text est PLUS FIABLE que click par index — utilise-le quand possible
-3. type_by_placeholder est PLUS FIABLE que type par index — utilise-le quand possible  
+3. type_by_placeholder est PLUS FIABLE que type par index — utilise-le quand possible
 4. Après type, fais press_key Enter pour soumettre les formulaires de recherche
 5. "clear": true pour vider un champ avant de taper dedans
 6. ⛔ NE RÉPÈTE JAMAIS la même action 3x. Change d'approche !
 7. Les cookies/RGPD sont gérés automatiquement, ignore-les
 8. Si tu es bloqué, essaie une approche différente (autre sélecteur, texte, placeholder)
+9. Quand la tâche est terminée, utilise "done" avec un résumé RICHE incluant les données collectées
+10. Si la page contient l'information demandée, LIS-LA depuis le contenu structuré avant de déclarer "done"
 
 Réponds UNIQUEMENT avec le JSON.`;
 
 export class AIDecider {
   constructor() {
-    this.client = new Anthropic({ apiKey: CONFIG.ANTHROPIC_API_KEY });
+    this.client = new OpenAI({
+      apiKey: CONFIG.ZAI_API_KEY,
+      baseURL: CONFIG.ZAI_BASE_URL,
+    });
   }
 
   async decide(task, observation, formattedDOM, actionHistory = []) {
     const loopWarning = this._detectLoop(actionHistory);
 
-    // Construire le message
+    // Construire le message texte
     let msg = `🎯 TÂCHE : ${task}\n\n`;
 
     if (actionHistory.length > 0) {
@@ -73,25 +97,31 @@ export class AIDecider {
     msg += `── État de la page ──\n${formattedDOM}\n`;
     msg += `\nProchaine action ? (JSON)`;
 
-    // Contenu avec screenshot
-    const content = [];
+    // Construire les messages au format OpenAI (compatible Z.ai)
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+    ];
+
+    const userContent = [];
     if (observation?.screenshot) {
-      content.push({
-        type: 'image',
-        source: { type: 'base64', media_type: 'image/jpeg', data: observation.screenshot },
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: `data:image/jpeg;base64,${observation.screenshot}` },
       });
     }
-    content.push({ type: 'text', text: msg });
+    userContent.push({ type: 'text', text: msg });
+    messages.push({ role: 'user', content: userContent });
 
     try {
-      const response = await this.client.messages.create({
-        model: CONFIG.CLAUDE_MODEL,
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content }],
+      // Utiliser le modèle vision quand on envoie un screenshot
+      const model = observation?.screenshot ? CONFIG.ZAI_VISION_MODEL : CONFIG.ZAI_MODEL;
+      const response = await this.client.chat.completions.create({
+        model,
+        max_tokens: CONFIG.MAX_TOKENS_DECIDER || 2048,
+        messages,
       });
 
-      const text = response.content[0]?.text || '';
+      const text = response.choices[0]?.message?.content || '';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         console.error('❌ Réponse non JSON:', text.slice(0, 200));

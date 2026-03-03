@@ -1,10 +1,14 @@
 // ── Phantom Agent Configuration ──────────────────────────────────────
-// Copie ce fichier en .env ou modifie directement les valeurs ici
+// Mets tes clés dans le fichier .env à la racine du projet
+
+import 'dotenv/config';
 
 export const CONFIG = {
-  // ── API Claude ──
-  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || 'YOUR_API_KEY_HERE',
-  CLAUDE_MODEL: process.env.CLAUDE_MODEL || 'claude-sonnet-4-5-20250929',
+  // ── API Z.ai (Zhipu GLM) ──
+  ZAI_API_KEY: process.env.ZAI_API_KEY || 'YOUR_API_KEY_HERE',
+  ZAI_MODEL: process.env.ZAI_MODEL || 'GLM-4.7',
+  ZAI_VISION_MODEL: process.env.ZAI_VISION_MODEL || 'GLM-4.6V',
+  ZAI_BASE_URL: 'https://open.bigmodel.cn/api/paas/v4',
 
   // ── Browser ──
   HEADLESS: process.env.HEADLESS === 'true' || false,
@@ -14,14 +18,21 @@ export const CONFIG = {
   SESSION_DIR: './sessions',
   SESSION_FILE: 'default.json',
   
+  // ── Chrome CDP (mode "Mon Chrome") ──
+  CDP_PORT: parseInt(process.env.CDP_PORT || '9222'),
+  CDP_HOST: process.env.CDP_HOST || '127.0.0.1',
+  CHROME_PATH: process.env.CHROME_PATH || '',  // Auto-detecté si vide
+
   // ── Server ──
   PORT: parseInt(process.env.PORT || '3001'),
   
   // ── Agent ──
-  MAX_STEPS: 25,           // Max d'actions par tâche
-  SCREENSHOT_QUALITY: 75,  // Qualité JPEG des screenshots
-  DOM_MAX_DEPTH: 8,        // Profondeur max d'extraction DOM
-  DOM_MAX_ELEMENTS: 150,   // Nombre max d'éléments interactifs extraits
+  MAX_STEPS: 25,              // Max d'actions par tâche
+  SCREENSHOT_QUALITY: 75,     // Qualité JPEG des screenshots
+  DOM_MAX_DEPTH: 8,           // Profondeur max d'extraction DOM
+  DOM_MAX_ELEMENTS: 150,      // Nombre max d'éléments interactifs extraits
+  CONTENT_MAX_CHARS: 8000,    // Limite texte contenu structuré
+  MAX_TOKENS_DECIDER: 2048,   // Tokens max pour la réponse du décideur
 
   // ── Simulation humaine (anti-détection bot) ──
   HUMAN_TYPING: {
