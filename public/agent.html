@@ -30,6 +30,8 @@
       --orange-dim: rgba(255, 171, 64, 0.15);
       --cyan: #18ffff;
       --cyan-dim: rgba(24, 255, 255, 0.1);
+      --blue: #448aff;
+      --blue-dim: rgba(68, 138, 255, 0.15);
     }
 
     body {
@@ -40,7 +42,6 @@
       overflow: hidden;
     }
 
-    /* ── Layout ─────────────────────────────────── */
     .app {
       display: grid;
       grid-template-rows: 56px 1fr;
@@ -48,7 +49,6 @@
       height: 100vh;
     }
 
-    /* ── Header ─────────────────────────────────── */
     header {
       grid-column: 1 / -1;
       background: var(--bg-surface);
@@ -69,20 +69,15 @@
     }
 
     .logo-icon {
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       background: linear-gradient(135deg, var(--accent), var(--accent-bright));
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-size: 16px;
     }
 
     .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 6px;
       padding: 4px 12px;
       border-radius: 100px;
       font-size: 12px;
@@ -100,9 +95,7 @@
       background: currentColor;
     }
 
-    .status-badge.running .status-dot {
-      animation: pulse 1.5s ease-in-out infinite;
-    }
+    .status-badge.running .status-dot { animation: pulse 1.5s ease-in-out infinite; }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -120,28 +113,15 @@
       font-family: 'Outfit', sans-serif;
       cursor: pointer;
       transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 6px;
     }
 
-    .mode-toggle:hover {
-      background: var(--bg-hover);
-      border-color: var(--border-bright);
-    }
-
-    .mode-toggle.manual {
-      background: var(--accent-glow);
-      border-color: var(--accent);
-      color: var(--accent-bright);
-    }
+    .mode-toggle:hover { background: var(--bg-hover); border-color: var(--border-bright); }
+    .mode-toggle.manual { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-bright); }
 
     .back-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
       border-radius: 8px;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
@@ -151,11 +131,7 @@
       transition: all 0.2s;
     }
 
-    .back-btn:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-      border-color: var(--border-bright);
-    }
+    .back-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-bright); }
 
     .mode-badge {
       font-family: 'JetBrains Mono', monospace;
@@ -167,19 +143,14 @@
       color: var(--accent-bright);
     }
 
-    .mode-badge.chrome {
-      background: rgba(255, 171, 64, 0.15);
-      color: #ffab40;
-    }
+    .mode-badge.chrome { background: rgba(255, 171, 64, 0.15); color: #ffab40; }
+    .mode-badge.extension { background: rgba(68, 138, 255, 0.15); color: #448aff; }
 
     .header-spacer { flex: 1; }
 
     .header-url {
-      flex: 1;
-      max-width: 500px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      flex: 1; max-width: 500px;
+      display: flex; align-items: center; gap: 8px;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -188,33 +159,24 @@
     }
 
     .header-url input {
-      flex: 1;
-      background: none;
-      border: none;
+      flex: 1; background: none; border: none;
       color: var(--text-primary);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      outline: none;
+      font-size: 12px; outline: none;
     }
 
     .header-url .url-icon { color: var(--text-dim); font-size: 14px; }
 
-    /* ── Sidebar (Chat + Log) ───────────────────── */
     .sidebar {
       background: var(--bg-surface);
       border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      display: flex; flex-direction: column; overflow: hidden;
     }
 
     .chat-messages {
-      flex: 1;
-      overflow-y: auto;
+      flex: 1; overflow-y: auto;
       padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      display: flex; flex-direction: column; gap: 10px;
     }
 
     .chat-messages::-webkit-scrollbar { width: 4px; }
@@ -235,48 +197,12 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .msg.user {
-      background: var(--accent);
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 4px;
-    }
-
-    .msg.agent {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-bottom-left-radius: 4px;
-    }
-
-    .msg.system {
-      background: var(--cyan-dim);
-      border: 1px solid rgba(24, 255, 255, 0.15);
-      color: var(--cyan);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      padding: 8px 12px;
-    }
-
-    .msg.error {
-      background: var(--red-dim);
-      border: 1px solid rgba(255, 82, 82, 0.2);
-      color: var(--red);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-    }
-
-    .msg.success {
-      background: var(--green-dim);
-      border: 1px solid rgba(0, 230, 118, 0.2);
-      color: var(--green);
-    }
-
-    .msg.phase {
-      color: var(--text-secondary);
-      font-size: 12px;
-      padding: 4px 12px;
-      font-family: 'JetBrains Mono', monospace;
-    }
+    .msg.user { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg.agent { background: var(--bg-elevated); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .msg.system { background: var(--cyan-dim); border: 1px solid rgba(24, 255, 255, 0.15); color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 8px 12px; }
+    .msg.error { background: var(--red-dim); border: 1px solid rgba(255, 82, 82, 0.2); color: var(--red); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    .msg.success { background: var(--green-dim); border: 1px solid rgba(0, 230, 118, 0.2); color: var(--green); }
+    .msg.phase { color: var(--text-secondary); font-size: 12px; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; }
 
     .msg .decision-action {
       display: inline-block;
@@ -290,17 +216,8 @@
       margin-right: 6px;
     }
 
-    /* ── Chat Input ─────────────────────────────── */
-    .chat-input-area {
-      padding: 12px 16px;
-      border-top: 1px solid var(--border);
-      background: var(--bg-surface);
-    }
-
-    .chat-input-row {
-      display: flex;
-      gap: 8px;
-    }
+    .chat-input-area { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg-surface); }
+    .chat-input-row { display: flex; gap: 8px; }
 
     .chat-input-row input {
       flex: 1;
@@ -315,196 +232,56 @@
       transition: border-color 0.2s;
     }
 
-    .chat-input-row input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
+    .chat-input-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
     .chat-input-row input::placeholder { color: var(--text-dim); }
 
     .btn {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 10px;
-      font-family: 'Outfit', sans-serif;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      padding: 10px 18px; border: none; border-radius: 10px;
+      font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #8b5cf6);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px var(--accent-glow);
-    }
-
-    .btn-danger {
-      background: var(--red-dim);
-      color: var(--red);
-      border: 1px solid rgba(255, 82, 82, 0.2);
-    }
-
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
+    .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255, 82, 82, 0.2); }
     .btn-danger:hover { background: rgba(255, 82, 82, 0.25); }
-
     .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* ── Browser View ───────────────────────────── */
-    .browser-view {
-      background: var(--bg-deep);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    .browser-view { background: var(--bg-deep); display: flex; flex-direction: column; overflow: hidden; }
 
     .browser-toolbar {
-      display: flex;
-      align-items: center;
-      padding: 8px 16px;
-      gap: 8px;
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .browser-toolbar .nav-btn {
-      width: 28px; height: 28px;
-      border: none;
-      background: var(--bg-elevated);
-      border-radius: 6px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      transition: all 0.15s;
-    }
-
-    .browser-toolbar .nav-btn:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
+      display: flex; align-items: center; padding: 8px 16px; gap: 8px;
+      background: var(--bg-surface); border-bottom: 1px solid var(--border);
     }
 
     .step-counter {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--text-dim);
-      padding: 4px 10px;
-      background: var(--bg-elevated);
-      border-radius: 6px;
+      font-size: 11px; color: var(--text-dim);
+      padding: 4px 10px; background: var(--bg-elevated); border-radius: 6px;
     }
 
     .browser-viewport {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      position: relative;
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
     }
 
-    .browser-viewport img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      border-radius: 0;
-    }
+    .browser-viewport img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      color: var(--text-dim);
-    }
+    .empty-state { display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--text-dim); }
+    .empty-state-icon { font-size: 48px; opacity: 0.3; }
+    .empty-state p { font-size: 14px; max-width: 300px; text-align: center; line-height: 1.6; }
 
-    .empty-state-icon {
-      font-size: 48px;
-      opacity: 0.3;
-    }
-
-    .empty-state p {
-      font-size: 14px;
-      max-width: 300px;
-      text-align: center;
-      line-height: 1.6;
-    }
-
-    /* ── Plan Panel ─────────────────────────────── */
-    .plan-panel {
-      display: none;
-      padding: 12px;
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin: 8px 16px;
-      font-size: 12px;
-    }
-
+    .plan-panel { display: none; padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; margin: 8px 16px; font-size: 12px; }
     .plan-panel.visible { display: block; }
-
-    .plan-panel h3 {
-      font-size: 12px;
-      color: var(--accent-bright);
-      margin-bottom: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .plan-step {
-      display: flex;
-      gap: 8px;
-      padding: 4px 0;
-      color: var(--text-secondary);
-      font-size: 12px;
-    }
-
-    .plan-step-num {
-      color: var(--accent);
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 600;
-      min-width: 20px;
-    }
-
+    .plan-panel h3 { font-size: 12px; color: var(--accent-bright); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; }
+    .plan-step { display: flex; gap: 8px; padding: 4px 0; color: var(--text-secondary); font-size: 12px; }
+    .plan-step-num { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-weight: 600; min-width: 20px; }
     .plan-step.active { color: var(--text-primary); }
     .plan-step.done { color: var(--green); text-decoration: line-through; opacity: 0.6; }
 
-    /* ── Loading animation ──────────────────────── */
-    .thinking {
-      display: inline-flex;
-      gap: 4px;
-      padding: 8px 12px;
-    }
-
-    .thinking span {
-      width: 6px; height: 6px;
-      background: var(--accent-bright);
-      border-radius: 50%;
-      animation: bounce 1.4s ease-in-out infinite;
-    }
-
-    .thinking span:nth-child(2) { animation-delay: 0.2s; }
-    .thinking span:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-
-    /* ── Responsive ─────────────────────────────── */
     @media (max-width: 768px) {
-      .app {
-        grid-template-columns: 1fr;
-        grid-template-rows: 56px 1fr 300px;
-      }
+      .app { grid-template-columns: 1fr; grid-template-rows: 56px 1fr 300px; }
       .browser-view { order: 1; }
       .sidebar { order: 2; }
     }
@@ -512,9 +289,8 @@
 </head>
 <body>
   <div class="app">
-    <!-- ── Header ──────────────────────────────── -->
     <header>
-      <a href="/" class="back-btn" title="Retour à l'accueil">←</a>
+      <a href="/" class="back-btn" title="Retour">←</a>
       <div class="logo">
         <div class="logo-icon">👻</div>
         <span>Phantom Agent</span>
@@ -524,52 +300,36 @@
         <div class="status-dot"></div>
         <span id="statusText">Prêt</span>
       </div>
-      <button class="mode-toggle" id="modeToggle" onclick="toggleMode()">
-        🤖 Auto
-      </button>
+      <button class="mode-toggle" id="modeToggle">🤖 Auto</button>
       <div class="header-spacer"></div>
       <div class="header-url">
         <span class="url-icon">🔗</span>
         <input type="text" id="urlBar" placeholder="URL actuelle..." readonly>
       </div>
-      <button class="step-counter" id="saveSessionBtn" onclick="saveSession()" style="cursor: pointer; transition: all 0.2s;"
-              onmouseover="this.style.background='var(--bg-hover)'"
-              onmouseout="this.style.background='var(--bg-elevated)'">
-        💾 Session
-      </button>
+      <button class="step-counter" id="saveSessionBtn" style="cursor: pointer;">💾 Session</button>
       <div class="step-counter" id="stepCounter">— / —</div>
     </header>
 
-    <!-- ── Sidebar ─────────────────────────────── -->
     <div class="sidebar">
       <div class="plan-panel" id="planPanel">
         <h3>📋 Plan d'exécution</h3>
         <div id="planSteps"></div>
       </div>
       <div class="chat-messages" id="chatMessages">
-        <div class="msg system">
+        <div class="msg system" id="welcomeMsg">
           🤖 Phantom Agent initialisé.<br>
-          Donnez-moi une tâche à accomplir dans le navigateur !<br><br>
-          Exemples :<br>
-          • "Va sur Google et cherche les dernières news sur l'IA"<br>
-          • "Va sur wikipedia et trouve la page de la Tour Eiffel"<br>
-          • "Va sur GitHub et explore les repos tendance"
+          Donnez-moi une tâche à accomplir dans le navigateur !
         </div>
       </div>
       <div class="chat-input-area">
         <div class="chat-input-row">
           <input type="text" id="taskInput" placeholder="Décris la tâche à accomplir..." autofocus>
-          <button class="btn btn-primary" id="sendBtn" onclick="sendTask()">
-            ▶ Go
-          </button>
-          <button class="btn btn-danger" id="stopBtn" onclick="stopTask()" style="display:none;">
-            ⛔ Stop
-          </button>
+          <button class="btn btn-primary" id="sendBtn">▶ Go</button>
+          <button class="btn btn-danger" id="stopBtn" style="display:none;">⛔ Stop</button>
         </div>
       </div>
     </div>
 
-    <!-- ── Browser View ────────────────────────── -->
     <div class="browser-view">
       <div class="browser-viewport" id="viewport">
         <div class="empty-state">
@@ -581,24 +341,27 @@
   </div>
 
   <script>
-    // ── Mode detection ────────────────────────────────────────────
+    // ── Mode detection ──
     const urlParams = new URLSearchParams(window.location.search);
     const agentMode = urlParams.get('mode') || 'builtin';
 
-    // Afficher le badge du mode
     (function initModeBadge() {
       const badge = document.getElementById('modeBadge');
       if (agentMode === 'chrome') {
         badge.textContent = 'Chrome CDP';
         badge.classList.add('chrome');
         document.title = 'Phantom Agent — Chrome CDP';
+      } else if (agentMode === 'extension') {
+        badge.textContent = '🧩 Extension';
+        badge.classList.add('extension');
+        document.title = 'Phantom Agent — Extension Chrome';
       } else {
         badge.textContent = 'Chromium';
         document.title = 'Phantom Agent — Chromium';
       }
     })();
 
-    // ── WebSocket Connection ───────────────────────────────────────
+    // ── WebSocket ──
     let ws = null;
     let isRunning = false;
     let isManualMode = false;
@@ -606,17 +369,16 @@
 
     function connect() {
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      ws = new WebSocket(`${protocol}//${location.host}`);
+      ws = new WebSocket(protocol + '//' + location.host);
 
       ws.onopen = () => {
         console.log('✅ WebSocket connecté');
-        // Envoyer le mode au serveur pour initialiser le bon controller
         ws.send(JSON.stringify({ type: 'init', mode: agentMode }));
         setStatus('ready', 'Connexion...');
       };
 
       ws.onclose = () => {
-        console.log('❌ WebSocket déconnecté, reconnexion...');
+        console.log('❌ Déconnecté, reconnexion...');
         setStatus('error', 'Déconnecté');
         setTimeout(connect, 2000);
       };
@@ -629,80 +391,73 @@
       };
     }
 
-    // ── Event Handler ──────────────────────────────────────────────
     function handleEvent(type, data) {
       switch (type) {
         case 'status':
           setStatus(data.status, data.message);
+          // En mode extension, démarrer l'auto-screenshot dès que prêt
+          if (agentMode === 'extension' && data.status === 'ready' && data.message.includes('Extension')) {
+            addMessage('system', '🧩 Extension Chrome connectée !<br>Le live screenshot est actif. Donnez une tâche à l\'agent.');
+            startScreenshotRefresh();
+          }
           break;
-
         case 'phase':
           addMessage('phase', data.message);
           break;
-
         case 'plan':
           showPlan(data.plan);
           break;
-
         case 'step':
-          document.getElementById('stepCounter').textContent = `${data.step} / ${data.maxSteps}`;
+          document.getElementById('stepCounter').textContent = data.step + ' / ' + data.maxSteps;
           break;
-
         case 'screenshot':
           updateScreenshot(data);
           break;
-
         case 'decision':
           showDecision(data.decision);
           break;
-
         case 'action_result':
-          // Optionnel : on peut logger chaque action
           break;
-
         case 'complete':
-          addMessage('success', `✅ Tâche terminée ! ${data.result}`);
+          addMessage('success', '✅ Tâche terminée ! ' + data.result);
           setStatus('ready', 'Terminé');
           setRunning(false);
+          // Reprendre le screenshot auto en mode extension
+          if (agentMode === 'extension') startScreenshotRefresh();
           break;
-
         case 'error':
-          addMessage('error', `❌ ${data.message}`);
+          addMessage('error', '❌ ' + data.message);
           setStatus('error', 'Erreur');
           setRunning(false);
+          if (agentMode === 'extension') startScreenshotRefresh();
           break;
-
         case 'stopped':
           addMessage('system', '⛔ Tâche arrêtée');
           setStatus('ready', 'Arrêté');
           setRunning(false);
+          if (agentMode === 'extension') startScreenshotRefresh();
           break;
-
         case 'session_saved':
-          if (data.success) {
-            addMessage('success', `💾 Session sauvegardée avec succès !`);
-          } else {
-            addMessage('error', `❌ Erreur sauvegarde session: ${data.error}`);
-          }
+          if (data.success) addMessage('success', '💾 Session sauvegardée !');
+          else addMessage('error', '❌ Sauvegarde: ' + data.error);
           break;
       }
     }
 
-    // ── UI Functions ───────────────────────────────────────────────
     function setStatus(status, text) {
       const badge = document.getElementById('statusBadge');
       const label = document.getElementById('statusText');
-      badge.className = `status-badge ${status === 'shutdown' ? 'error' : status}`;
-      if (status === 'executing' || status === 'planning' || status === 'observing' || status === 'deciding') {
-        badge.className = 'status-badge running';
-      }
+      badge.className = 'status-badge ' + (
+        ['executing', 'planning', 'observing', 'deciding'].includes(status) ? 'running' :
+        status === 'shutdown' ? 'error' : status
+      );
       label.textContent = text.replace(/^[^\w]*/, '').slice(0, 30);
     }
 
     function addMessage(type, text) {
       const container = document.getElementById('chatMessages');
       const msg = document.createElement('div');
-      msg.className = `msg ${type}`;
+      msg.className = 'msg ' + type;
       msg.innerHTML = text;
       container.appendChild(msg);
       container.scrollTop = container.scrollHeight;
@@ -712,7 +467,6 @@
       const panel = document.getElementById('planPanel');
       const stepsDiv = document.getElementById('planSteps');
       panel.classList.add('visible');
-      
       stepsDiv.innerHTML = '';
       if (plan.task_understanding) {
         const p = document.createElement('p');
@@ -720,28 +474,24 @@
         p.textContent = plan.task_understanding;
         stepsDiv.appendChild(p);
       }
-
       for (const step of plan.steps || []) {
         const div = document.createElement('div');
         div.className = 'plan-step';
-        div.innerHTML = `<span class="plan-step-num">${step.step}.</span><span>${step.description}</span>`;
+        div.innerHTML = '<span class="plan-step-num">' + step.step + '.</span><span>' + step.description + '</span>';
         stepsDiv.appendChild(div);
       }
     }
 
     function showDecision(decision) {
       if (decision.action === 'done' || decision.action === 'error') return;
-      const actionLabel = `<span class="decision-action">${decision.action.toUpperCase()}</span>`;
-      addMessage('agent', `${actionLabel} ${decision.reason || ''}`);
+      const label = '<span class="decision-action">' + decision.action.toUpperCase() + '</span>';
+      addMessage('agent', label + ' ' + (decision.reason || ''));
     }
 
     function updateScreenshot(data) {
       const viewport = document.getElementById('viewport');
-      viewport.innerHTML = `<img src="data:image/jpeg;base64,${data.image}" alt="Browser screenshot">`;
-      
-      if (data.url) {
-        document.getElementById('urlBar').value = data.url;
-      }
+      viewport.innerHTML = '<img src="data:image/jpeg;base64,' + data.image + '" alt="Browser screenshot">';
+      if (data.url) document.getElementById('urlBar').value = data.url;
     }
 
     function setRunning(running) {
@@ -749,80 +499,35 @@
       document.getElementById('sendBtn').style.display = running ? 'none' : 'flex';
       document.getElementById('stopBtn').style.display = running ? 'flex' : 'none';
       document.getElementById('taskInput').disabled = running;
+      // Stopper l'auto-refresh pendant que l'agent travaille (il envoie ses propres screenshots)
+      if (running) stopScreenshotRefresh();
     }
 
-    // ── Actions ────────────────────────────────────────────────────
+    // ── Actions ──
     function sendTask() {
       const input = document.getElementById('taskInput');
       const task = input.value.trim();
       if (!task || !ws || ws.readyState !== 1) return;
-
       addMessage('user', task);
-      ws.send(JSON.stringify({ type: 'task', task }));
+      ws.send(JSON.stringify({ type: 'task', task: task }));
       input.value = '';
       setRunning(true);
       setStatus('running', 'En cours...');
     }
 
     function stopTask() {
-      if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ type: 'stop' }));
-      }
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'stop' }));
     }
 
     function saveSession() {
-      if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ type: 'save_session' }));
-      }
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'save_session' }));
     }
 
-    // ── Mode Manuel/Auto ───────────────────────────────────────────
-    function toggleMode() {
-      isManualMode = !isManualMode;
-      const toggleBtn = document.getElementById('modeToggle');
-      const urlBar = document.getElementById('urlBar');
-      const taskInput = document.getElementById('taskInput');
-      const sendBtn = document.getElementById('sendBtn');
-
-      if (isManualMode) {
-        // Mode Manuel
-        toggleBtn.textContent = '🎮 Manuel';
-        toggleBtn.classList.add('manual');
-        urlBar.removeAttribute('readonly');
-        urlBar.placeholder = 'Entrez une URL et appuyez sur Entrée...';
-        taskInput.disabled = true;
-        sendBtn.disabled = true;
-
-        // Démarrer l'auto-refresh du screenshot toutes les 2 secondes
-        startScreenshotRefresh();
-
-        addMessage('system', '🎮 Mode manuel activé. Vous pouvez naviguer via la barre URL ou directement dans la fenêtre Chromium.');
-      } else {
-        // Mode Auto
-        toggleBtn.textContent = '🤖 Auto';
-        toggleBtn.classList.remove('manual');
-        urlBar.setAttribute('readonly', 'readonly');
-        urlBar.placeholder = 'URL actuelle...';
-        if (!isRunning) {
-          taskInput.disabled = false;
-          sendBtn.disabled = false;
-        }
-
-        // Arrêter l'auto-refresh
-        stopScreenshotRefresh();
-
-        addMessage('system', '🤖 Mode auto activé. L\'IA reprend le contrôle.');
-      }
-    }
-
+    // ── Screenshot auto-refresh (pour mode extension & mode manuel) ──
     function startScreenshotRefresh() {
-      // Prendre un screenshot immédiatement
+      stopScreenshotRefresh();
       requestScreenshot();
-
-      // Puis toutes les 2 secondes
-      screenshotInterval = setInterval(() => {
-        requestScreenshot();
-      }, 2000);
+      screenshotInterval = setInterval(requestScreenshot, 2000);
     }
 
     function stopScreenshotRefresh() {
@@ -838,42 +543,64 @@
       }
     }
 
-    function navigateManual(url) {
-      if (!url || !ws || ws.readyState !== 1) return;
+    // ── Mode Manuel/Auto ──
+    function toggleMode() {
+      isManualMode = !isManualMode;
+      const toggleBtn = document.getElementById('modeToggle');
+      const urlBar = document.getElementById('urlBar');
+      const taskInput = document.getElementById('taskInput');
+      const sendBtn = document.getElementById('sendBtn');
 
-      // Ajouter https:// si pas de protocole
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
+      if (isManualMode) {
+        toggleBtn.textContent = '🎮 Manuel';
+        toggleBtn.classList.add('manual');
+        urlBar.removeAttribute('readonly');
+        urlBar.placeholder = 'Entrez une URL et appuyez sur Entrée...';
+        taskInput.disabled = true;
+        sendBtn.disabled = true;
+        startScreenshotRefresh();
+        addMessage('system', '🎮 Mode manuel activé.');
+      } else {
+        toggleBtn.textContent = '🤖 Auto';
+        toggleBtn.classList.remove('manual');
+        urlBar.setAttribute('readonly', 'readonly');
+        urlBar.placeholder = 'URL actuelle...';
+        if (!isRunning) { taskInput.disabled = false; sendBtn.disabled = false; }
+        // En mode extension, garder le refresh ; sinon l'arrêter
+        if (agentMode !== 'extension') stopScreenshotRefresh();
+        addMessage('system', '🤖 Mode auto activé.');
       }
-
-      ws.send(JSON.stringify({ type: 'navigate', url }));
     }
 
-    // ── Keyboard shortcut ──────────────────────────────────────────
-    document.getElementById('taskInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendTask();
-      }
+    function navigateManual(url) {
+      if (!url || !ws || ws.readyState !== 1) return;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+      ws.send(JSON.stringify({ type: 'navigate', url: url }));
+    }
+
+    // ── Events ──
+    document.getElementById('taskInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendTask(); }
     });
 
-    // ── URL Bar navigation (mode manuel) ───────────────────────────
-    document.getElementById('urlBar').addEventListener('keydown', (e) => {
+    document.getElementById('urlBar').addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && isManualMode) {
         e.preventDefault();
-        const url = e.target.value.trim();
-        if (url) {
-          navigateManual(url);
-        }
+        if (e.target.value.trim()) navigateManual(e.target.value.trim());
       }
     });
 
-    // ── Masquer le bouton session en mode Chrome CDP ──────────────
-    if (agentMode === 'chrome') {
+    document.getElementById('sendBtn').addEventListener('click', sendTask);
+    document.getElementById('stopBtn').addEventListener('click', stopTask);
+    document.getElementById('modeToggle').addEventListener('click', toggleMode);
+    document.getElementById('saveSessionBtn').addEventListener('click', saveSession);
+
+    // Masquer le bouton session en mode Chrome CDP / Extension
+    if (agentMode === 'chrome' || agentMode === 'extension') {
       document.getElementById('saveSessionBtn').style.display = 'none';
     }
 
-    // ── Init ───────────────────────────────────────────────────────
+    // ── Init ──
     connect();
   </script>
 </body>

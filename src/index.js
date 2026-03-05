@@ -1,5 +1,6 @@
-// ── Phantom Agent Server ─────────────────────────────────────────────
-// Serveur Express + WebSocket pour l'interface web temps réel
+// ── Phantom Agent Server v2 ──────────────────────────────────────────
+// Serveur Express + WebSocket
+// v2 : Support du mode Extension Chrome (3ème mode de connexion)
 
 import express from 'express';
 import { createServer } from 'http';
@@ -11,6 +12,7 @@ import fs from 'fs';
 import { PhantomAgent } from './core/agent.js';
 import { BrowserController } from './core/browser-controller.js';
 import { ChromeController } from './core/chrome-controller.js';
+import { ExtensionController } from './core/extension-controller.js';
 import { CONFIG } from './config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +23,69 @@ const wss = new WebSocketServer({ server });
 
 // Servir les fichiers statiques
 app.use(express.static(join(__dirname, '..', 'public')));
+
+// ══════════════════════════════════════════════════════════════════════
+// 🔌 GESTION DES EXTENSIONS CONNECTÉES
+// ══════════════════════════════════════════════════════════════════════
+let connectedExtension = null; // WebSocket de l'extension Chrome
+let extensionController = null; // Le controller associé
+let waitingForExtension = []; // Agents qui attendent une extension
+
+function onExtensionConnected(ws, info) {
+  console.log('');
+  console.log('══════════════════════════════════════════');
+  console.log('🧩 Extension Chrome connectée !');
+  console.log(`   Agent: ${info.agent} v${info.version}`);
+  console.log('══════════════════════════════════════════');
+  console.log('');
+
+  connectedExtension = ws;
+
+  // Si un controller attend l'extension → le brancher
+  if (extensionController) {
+    extensionController.attachExtension(ws);
+  }
+
+  // Résoudre les agents en attente
+  for (const resolve of waitingForExtension) {
+    resolve(ws);
+  }
+  waitingForExtension = [];
+
+  ws.on('close', () => {
+    console.log('🧩 Extension Chrome déconnectée');
+    connectedExtension = null;
+  });
+}
+
+// Attendre qu'une extension se connecte (avec timeout)
+function waitForExtensionConnection(timeoutMs = 60000) {
+  if (connectedExtension && connectedExtension.readyState === 1) {
+    return Promise.resolve(connectedExtension);
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      const idx = waitingForExtension.indexOf(resolve);
+      if (idx !== -1) waitingForExtension.splice(idx, 1);
+      reject(new Error('Timeout : l\'extension Chrome ne s\'est pas connectée (60s). Vérifiez que l\'extension est installée et activée.'));
+    }, timeoutMs);
+
+    waitingForExtension.push((ws) => {
+      clearTimeout(timeout);
+      resolve(ws);
+    });
+  });
+}
+
+// ── API : Vérifier si l'extension est connectée ──
+app.get('/api/check-extension', (_req, res) => {
+  if (connectedExtension && connectedExtension.readyState === 1) {
+    res.json({ ok: true, message: 'Extension connectée' });
+  } else {
+    res.json({ ok: false });
+  }
+});
 
 // ── Détection automatique du chemin Chrome (cross-platform) ─────────
 function findChromePath() {
@@ -42,12 +107,9 @@ function findChromePath() {
     ];
   } else {
     candidates = [
-      '/usr/bin/google-chrome',
-      '/usr/bin/google-chrome-stable',
-      '/usr/bin/chromium',
-      '/usr/bin/chromium-browser',
-      '/snap/bin/chromium',
-      '/usr/local/bin/google-chrome',
+      '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable',
+      '/usr/bin/chromium', '/usr/bin/chromium-browser',
+      '/snap/bin/chromium', '/usr/local/bin/google-chrome',
     ];
   }
 
@@ -70,7 +132,6 @@ function findChromePath() {
   return null;
 }
 
-// ── Helper : vérifier si le port CDP est déjà écouté ────────────────
 async function checkCDP() {
   try {
     const resp = await fetch(`http://${CONFIG.CDP_HOST}:${CONFIG.CDP_PORT}/json/version`);
@@ -79,188 +140,180 @@ async function checkCDP() {
   return null;
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// 🔪 KILL CHROME — Ferme toutes les instances Chrome proprement
-// ══════════════════════════════════════════════════════════════════════
 function killAllChrome() {
   const platform = process.platform;
   console.log(`🔪 Fermeture de toutes les instances Chrome (${platform})...`);
-
   try {
     if (platform === 'win32') {
-      // /F = force, /IM = image name, /T = arbre de processus
       execSync('taskkill /F /IM chrome.exe /T', { encoding: 'utf-8', timeout: 10000 });
     } else if (platform === 'darwin') {
       execSync('pkill -f "Google Chrome"', { encoding: 'utf-8', timeout: 5000 });
     } else {
-      // Linux : essayer chrome puis chromium
       try { execSync('pkill -f chrome', { encoding: 'utf-8', timeout: 5000 }); } catch { /* ok */ }
       try { execSync('pkill -f chromium', { encoding: 'utf-8', timeout: 5000 }); } catch { /* ok */ }
     }
     console.log('✅ Processus Chrome fermés');
     return { success: true };
   } catch (err) {
-    // taskkill retourne une erreur si aucun processus trouvé — c'est OK
     if (err.message && (err.message.includes('not found') || err.message.includes('introuvable') || err.message.includes('No matching'))) {
-      console.log('ℹ️  Aucun processus Chrome trouvé (déjà fermé)');
+      console.log('ℹ️  Aucun processus Chrome trouvé');
       return { success: true };
     }
-    // Sur Windows, code de retour 128 = processus introuvable = OK
     if (err.status === 128 || err.status === 1) {
       console.log('ℹ️  Aucun processus Chrome en cours');
       return { success: true };
     }
-    console.log(`⚠️  Kill Chrome: ${err.message} (on continue quand même)`);
-    return { success: true }; // On continue même en cas d'erreur
+    return { success: true };
   }
 }
 
-// ── Vérifier que Chrome est bien fermé ──────────────────────────────
 async function waitForChromeKilled(maxWaitMs = 5000) {
   const interval = 300;
   let elapsed = 0;
-
   while (elapsed < maxWaitMs) {
     await new Promise(r => setTimeout(r, interval));
     elapsed += interval;
-
     try {
       if (process.platform === 'win32') {
         const result = execSync('tasklist /FI "IMAGENAME eq chrome.exe" /NH', { encoding: 'utf-8', timeout: 3000 });
         if (!result.includes('chrome.exe')) return true;
       } else {
         execSync('pgrep -f chrome', { encoding: 'utf-8', timeout: 3000 });
-        // Si pgrep réussit → chrome tourne encore
       }
-    } catch {
-      // pgrep échoue = aucun processus = c'est bon !
-      return true;
-    }
+    } catch { return true; }
   }
-
-  return false; // Timeout — on tente quand même
+  return false;
 }
 
-// ── API : vérifier si CDP est disponible ────────────────────────────
+// ── API CDP ──
 app.get('/api/check-cdp', async (_req, res) => {
   const data = await checkCDP();
-  if (data) {
-    res.json({ ok: true, browser: data.Browser || 'Chrome' });
-  } else {
-    res.json({ ok: false });
-  }
+  if (data) res.json({ ok: true, browser: data.Browser || 'Chrome' });
+  else res.json({ ok: false });
 });
 
-// ══════════════════════════════════════════════════════════════════════
-// 🚀 API : lancer Chrome avec CDP (auto-kill + relaunch)
-// ══════════════════════════════════════════════════════════════════════
 app.post('/api/launch-chrome', async (_req, res) => {
-  // 1. Vérifier si CDP est déjà dispo
   const existing = await checkCDP();
-  if (existing) {
-    return res.json({ ok: true, message: 'Chrome CDP deja disponible', browser: existing.Browser });
-  }
+  if (existing) return res.json({ ok: true, message: 'Chrome CDP deja disponible', browser: existing.Browser });
 
-  // 2. Trouver Chrome
   const chromePath = findChromePath();
   if (!chromePath) {
-    const hint = process.platform === 'win32'
-      ? 'Definissez CHROME_PATH dans .env'
-      : 'Installez Chrome ou Chromium, ou definissez CHROME_PATH dans .env';
-    return res.json({
-      ok: false,
-      error: `Chrome introuvable (${process.platform}). ${hint}`,
-    });
+    return res.json({ ok: false, error: `Chrome introuvable. Définissez CHROME_PATH dans .env` });
   }
 
-  // 3. ⚡ KILL — Fermer TOUTES les instances Chrome existantes
-  console.log('');
-  console.log('═══ Relancement Chrome avec CDP ═══');
   killAllChrome();
-
-  // 4. Attendre que Chrome soit bien fermé
-  console.log('⏳ Attente fermeture complète...');
   await waitForChromeKilled(5000);
-
-  // Petite pause de sécurité (Windows libère les locks de fichier lentement)
   await new Promise(r => setTimeout(r, 1500));
 
-  // 5. Relancer Chrome avec le flag CDP
-  console.log(`🚀 Lancement : ${chromePath} --remote-debugging-port=${CONFIG.CDP_PORT}`);
   try {
-    const args = [
+    const child = spawn(chromePath, [
       `--remote-debugging-port=${CONFIG.CDP_PORT}`,
-      '--no-first-run',
-      '--no-default-browser-check',
-      // Restaurer les onglets de la session précédente
-      '--restore-last-session',
-    ];
-
-    const child = spawn(chromePath, args, {
-      detached: true,
-      stdio: 'ignore',
-    });
+      '--no-first-run', '--no-default-browser-check', '--restore-last-session',
+    ], { detached: true, stdio: 'ignore' });
     child.unref();
-
-    child.on('error', (err) => {
-      console.error(`❌ Erreur spawn Chrome: ${err.message}`);
-    });
+    child.on('error', (err) => console.error(`❌ Erreur spawn Chrome: ${err.message}`));
   } catch (err) {
     return res.json({ ok: false, error: `Impossible de lancer Chrome: ${err.message}` });
   }
 
-  // 6. Attendre que CDP soit prêt (poll pendant 15s max)
-  const maxWait = 15000;
-  const interval = 500;
+  const maxWait = 15000, interval = 500;
   let elapsed = 0;
   while (elapsed < maxWait) {
     await new Promise(r => setTimeout(r, interval));
     elapsed += interval;
     const data = await checkCDP();
-    if (data) {
-      console.log(`✅ Chrome CDP prêt ! (${elapsed}ms)`);
-      console.log('═══════════════════════════════════');
-      return res.json({ ok: true, message: 'Chrome relance avec CDP', browser: data.Browser });
-    }
+    if (data) return res.json({ ok: true, message: 'Chrome relancé avec CDP', browser: data.Browser });
   }
 
-  res.json({
-    ok: false,
-    error: 'Chrome lance mais CDP ne repond pas apres 15s. Reessayez.',
-  });
+  res.json({ ok: false, error: 'Chrome lancé mais CDP ne répond pas après 15s. Réessayez.' });
 });
 
-// ── WebSocket Handler ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+// 🔌 WEBSOCKET HANDLER
+// ══════════════════════════════════════════════════════════════════════
+
 wss.on('connection', (ws) => {
-  console.log('🔌 Client connecté');
+  console.log('🔌 Nouvelle connexion WebSocket');
 
   let agent = null;
+  let isExtensionWs = false;
 
   const send = (type, data) => {
-    if (ws.readyState === 1) {
-      ws.send(JSON.stringify({ type, data }));
-    }
+    if (ws.readyState === 1) ws.send(JSON.stringify({ type, data }));
   };
 
   ws.on('message', async (raw) => {
     try {
       const msg = JSON.parse(raw.toString());
 
+      // ── Détection : c'est l'extension Chrome ? ──
+      if (msg.type === 'extension_connect') {
+        isExtensionWs = true;
+        onExtensionConnected(ws, msg);
+        return;
+      }
+
+      // ── Résultat de commande extension (routé par le background) ──
+      if (msg.type === 'cmd_result' || msg.type === 'pong') {
+        // Géré directement par le ExtensionController.attachExtension()
+        return;
+      }
+
+      // ── Messages du client web ──
       switch (msg.type) {
         case 'init': {
           const mode = msg.mode || 'builtin';
           console.log(`🎛️  Mode sélectionné : ${mode}`);
 
-          const controller = mode === 'chrome'
-            ? new ChromeController()
-            : new BrowserController();
+          let controller;
 
-          agent = new PhantomAgent(controller, send);
+          if (mode === 'extension') {
+            // Mode Extension Chrome
+            controller = new ExtensionController();
+            extensionController = controller;
 
-          try {
-            await agent.init();
-          } catch (err) {
-            send('error', { message: `Erreur initialisation (${mode}): ${err.message}` });
+            send('status', { status: 'ready', message: '⏳ En attente de l\'extension Chrome...' });
+
+            // Vérifier si l'extension est déjà connectée
+            if (connectedExtension && connectedExtension.readyState === 1) {
+              controller.attachExtension(connectedExtension);
+              send('status', { status: 'ready', message: '🧩 Extension Chrome connectée !' });
+            } else {
+              send('status', { status: 'running', message: '⏳ Ouvrez Chrome et activez l\'extension Phantom Agent...' });
+              try {
+                const extWs = await waitForExtensionConnection(60000);
+                controller.attachExtension(extWs);
+                send('status', { status: 'ready', message: '🧩 Extension Chrome connectée !' });
+              } catch (err) {
+                send('error', { message: err.message });
+                return;
+              }
+            }
+
+            agent = new PhantomAgent(controller, send);
+            // Pas besoin de agent.init() car launch() ne fait rien en mode extension
+            agent.browser = controller;
+            // Remplacer l'observer par un compatible extension
+            const { DOMObserverUniversal } = await import('./core/dom-observer-universal.js');
+            agent.observer = new DOMObserverUniversal(controller);
+
+          } else if (mode === 'chrome') {
+            controller = new ChromeController();
+            agent = new PhantomAgent(controller, send);
+            try {
+              await agent.init();
+            } catch (err) {
+              send('error', { message: `Erreur initialisation Chrome CDP: ${err.message}` });
+            }
+          } else {
+            // Mode Playwright intégré (builtin)
+            controller = new BrowserController();
+            agent = new PhantomAgent(controller, send);
+            try {
+              await agent.init();
+            } catch (err) {
+              send('error', { message: `Erreur initialisation Playwright: ${err.message}` });
+            }
           }
           break;
         }
@@ -306,6 +359,10 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', async () => {
+    if (isExtensionWs) {
+      console.log('🧩 Extension WebSocket fermé');
+      return;
+    }
     console.log('🔌 Client déconnecté');
     if (agent) await agent.shutdown();
   });
@@ -315,22 +372,18 @@ wss.on('connection', (ws) => {
 server.listen(CONFIG.PORT, () => {
   console.log('');
   console.log('╔══════════════════════════════════════════════╗');
-  console.log('║         🤖 PHANTOM AGENT v0.1.0             ║');
+  console.log('║         🤖 PHANTOM AGENT v0.2.0             ║');
   console.log('║     AI-Powered Browser Automation Agent      ║');
   console.log('╠══════════════════════════════════════════════╣');
   console.log(`║  🌐 Interface : http://localhost:${CONFIG.PORT}         ║`);
   console.log(`║  👁️  Headless  : ${CONFIG.HEADLESS ? 'Oui' : 'Non (navigateur visible)'}       ║`);
   console.log(`║  🧠 Modèle    : ${CONFIG.ZAI_MODEL.slice(0, 24).padEnd(24)}  ║`);
   console.log(`║  💻 Plateforme: ${process.platform.padEnd(24)}  ║`);
+  console.log('╠══════════════════════════════════════════════╣');
+  console.log('║  Modes :                                     ║');
+  console.log('║  🌐 Chromium Playwright (intégré)             ║');
+  console.log('║  🟡 Chrome CDP (DevTools Protocol)            ║');
+  console.log('║  🧩 Extension Chrome (NOUVEAU !)              ║');
   console.log('╚══════════════════════════════════════════════╝');
-  console.log('');
-
-  const chromePath = findChromePath();
-  if (chromePath) {
-    console.log(`🔍 Chrome détecté : ${chromePath}`);
-    console.log(`   Le mode "Mon Chrome" va auto-kill + relancer Chrome avec CDP`);
-  } else {
-    console.log('⚠️  Chrome non détecté. Définissez CHROME_PATH dans .env');
-  }
   console.log('');
 });
